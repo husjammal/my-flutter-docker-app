@@ -8,13 +8,13 @@ RUN apt-get update && apt-get install -y curl git unzip xz-utils libglu1-mesa wg
 
 # Download and Setup Flutter SDK
 # # Download Flutter - Using a specific stable branch is better for production
-# RUN git clone https://github.com/flutter/flutter.git -b stable /usr/local/flutter
-# ENV PATH="/usr/local/flutter/bin:/usr/local/flutter/bin/cache/dart-sdk/bin:${PATH}"
-# 1. Download Flutter SDK as a package (more stable for Render)
-RUN wget https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.24.3-stable.tar.xz
-# 2. Extract while forcing it to ignore ownership/permission errors
-RUN tar -xf flutter_linux_3.24.3-stable.tar.xz -C /usr/local --no-same-owner
+RUN git clone https://github.com/flutter/flutter.git -b stable /usr/local/flutter
 ENV PATH="/usr/local/flutter/bin:/usr/local/flutter/bin/cache/dart-sdk/bin:${PATH}"
+# # 1. Download Flutter SDK as a package (more stable for Render)
+# RUN wget https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.24.3-stable.tar.xz
+# # 2. Extract while forcing it to ignore ownership/permission errors
+# RUN tar -xf flutter_linux_3.24.3-stable.tar.xz -C /usr/local --no-same-owner
+# ENV PATH="/usr/local/flutter/bin:/usr/local/flutter/bin/cache/dart-sdk/bin:${PATH}"
 
 # FIX: Tell Flutter to only care about Web and ignore permission errors
 RUN flutter config --no-analytics
@@ -29,7 +29,8 @@ WORKDIR /app
 # OPTIMIZATION: Copy only pubspec files first to cache dependencies
 # Copy pubspec files individually to avoid folder-depth confusion
 COPY pubspec.yaml /app/pubspec.yaml
-COPY pubspec.lock /app/pubspec.lock
+# We skip copying pubspec.lock for a moment to let Flutter resolve the best versions
+# COPY pubspec.lock /app/pubspec.lock
 
 # Get dependencies
 RUN flutter pub get

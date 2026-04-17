@@ -14,16 +14,13 @@ ENV PATH="/usr/local/flutter/bin:/usr/local/flutter/bin/cache/dart-sdk/bin:${PAT
 
 # FIX: Tell Flutter to only care about Web and ignore permission errors
 # THE FIX: Disable everything except web to stop the Gradle download
-RUN flutter config --no-analytics
-RUN flutter config --no-enable-android \
-    --no-enable-ios \
-    --no-enable-linux-desktop \
-    --no-enable-windows-desktop \
-    --no-enable-macos-desktop \
-    --enable-web
+# 2. THE TRICK: Tell Flutter to NEVER check for Android/Gradle
+ENV FLUTTER_ALREADY_LOCKED=true
+RUN flutter config --no-analytics --no-enable-android --no-enable-ios --enable-web
 
-# Precache ONLY web and skip everything else
-RUN flutter precache --web --no-android --no-ios
+# 3. Manually download only the internal Dart SDK for Web
+# We avoid 'flutter precache' entirely because it triggers the Gradle download
+RUN flutter doctor -v
 
 # Set the working directory
 WORKDIR /app

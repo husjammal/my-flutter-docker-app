@@ -14,8 +14,8 @@ ENV PATH="/usr/local/flutter/bin:/usr/local/flutter/bin/cache/dart-sdk/bin:${PAT
 
 # FIX: Tell Flutter to only care about Web and ignore permission errors
 # THE FIX: Disable everything except web to stop the Gradle download
-# 2. THE TRICK: Tell Flutter to NEVER check for Android/Gradle
-ENV FLUTTER_ALREADY_LOCKED=true
+# This prevents Flutter from trying to download Gradle in the background
+ENV FLUTTER_NO_AUTOMATIC_COMPONENTS=true
 RUN flutter config --no-analytics --no-enable-android --no-enable-ios --enable-web
 
 # 3. Manually download only the internal Dart SDK for Web
@@ -31,14 +31,14 @@ COPY pubspec.yaml /app/pubspec.yaml
 # We skip copying pubspec.lock for a moment to let Flutter resolve the best versions
 # COPY pubspec.lock /app/pubspec.lock
 
-# Get dependencies
+#'pub get' will download the Dart SDK components without triggering the Gradle download
 RUN flutter pub get
 
 # Copy the rest of the source code
 COPY . .
 
-# Build the web app
-RUN flutter build web --release
+# Using --no-pub ensures we don't trigger background checks
+RUN flutter build web --release --no-pub
 
 # --- STAGE 2: The Production Image ---
 FROM nginx:alpine

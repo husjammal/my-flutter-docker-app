@@ -10,18 +10,20 @@ RUN apt-get update && apt-get install -y curl git unzip xz-utils libglu1-mesa wg
 # # Download Flutter - Using a specific stable branch is better for production
 RUN git clone https://github.com/flutter/flutter.git -b stable /usr/local/flutter
 ENV PATH="/usr/local/flutter/bin:/usr/local/flutter/bin/cache/dart-sdk/bin:${PATH}"
-# # 1. Download Flutter SDK as a package (more stable for Render)
-# RUN wget https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.24.3-stable.tar.xz
-# # 2. Extract while forcing it to ignore ownership/permission errors
-# RUN tar -xf flutter_linux_3.24.3-stable.tar.xz -C /usr/local --no-same-owner
-# ENV PATH="/usr/local/flutter/bin:/usr/local/flutter/bin/cache/dart-sdk/bin:${PATH}"
+
 
 # FIX: Tell Flutter to only care about Web and ignore permission errors
+# THE FIX: Disable everything except web to stop the Gradle download
 RUN flutter config --no-analytics
-RUN flutter config --enable-web
+RUN flutter config --no-enable-android \
+    --no-enable-ios \
+    --no-enable-linux-desktop \
+    --no-enable-windows-desktop \
+    --no-enable-macos-desktop \
+    --enable-web
 
-# OPTIMIZATION: Instead of 'flutter doctor', we only fetch the web-sdk
-RUN flutter precache --web
+# Precache ONLY web and skip everything else
+RUN flutter precache --web --no-android --no-ios
 
 # Set the working directory
 WORKDIR /app

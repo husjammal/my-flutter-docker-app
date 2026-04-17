@@ -1,2 +1,3 @@
-*
-!build/web
+.git
+.dart_tool
+/build

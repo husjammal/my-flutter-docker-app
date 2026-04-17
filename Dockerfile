@@ -5,20 +5,24 @@ FROM debian:bookworm-slim AS build-env
 RUN apt-get update && apt-get install -y curl git unzip xz-utils libglu1-mesa
 
 # Download and Setup Flutter SDK
-RUN git clone https://github.com/flutter/flutter.git /usr/local/flutter
+# Download Flutter - Using a specific stable branch is better for production
+RUN git clone https://github.com/flutter/flutter.git -b stable /usr/local/flutter
 ENV PATH="/usr/local/flutter/bin:/usr/local/flutter/bin/cache/dart-sdk/bin:${PATH}"
 
 # Run flutter doctor to initialize
-RUN flutter doctor
+# RUN flutter doctor
+
+# FIX: Tell Flutter to only care about Web and ignore permission errors
+RUN flutter config --no-analytics
+RUN flutter config --enable-web
+
+# OPTIMIZATION: Instead of 'flutter doctor', we only fetch the web-sdk
+RUN flutter precache --web
 
 # Set the working directory
 WORKDIR /app
 
 # OPTIMIZATION: Copy only pubspec files first to cache dependencies
-#(The asterisk * tells Docker: "Copy pubspec.lock if it exists, but don't crash if it doesn't.")
-# COPY pubspec.yaml pubspec.lock* ./ 
-# RUN flutter pub get
-
 # Copy pubspec files individually to avoid folder-depth confusion
 COPY pubspec.yaml /app/pubspec.yaml
 COPY pubspec.lock /app/pubspec.lock
